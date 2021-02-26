@@ -66,7 +66,7 @@ add_library(${PROJECT_NAME} STATIC
         mustache/ecs/world_storage.hpp
         mustache/ecs/component_version_storage.cpp
         mustache/ecs/component_version_storage.hpp
-)
+        )
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}

@@ -129,15 +129,25 @@ namespace mustache {
         template<typename TupleType>
         Entity create(EntityBuilder<TupleType>& args_pack);
 
-        ComponentIdMask getExtraComponents(const ComponentIdMask&) const noexcept;
+        ArchetypeComponents getExtraComponents(const ArchetypeComponents& components) const noexcept;
 
-        void addDependency(ComponentId master, const ComponentIdMask& dependent_mask) noexcept;
+        // components + getExtraComponents(components)
+        ArchetypeComponents getAllComponents(const ArchetypeComponents& components) const noexcept;
+
+        void addDependency(ComponentId master, const ArchetypeComponents& dependency) noexcept;
+
+        void addDependency(SharedComponentId master, const ArchetypeComponents& dependency) noexcept;
 
         template<typename _Master, typename... DEPENDENT>
         void addDependency() noexcept {
-            const auto component_id = ComponentFactory::registerComponent<_Master>();
-            const auto depend_on_mask = ComponentFactory::makeMask<DEPENDENT...>();
-            addDependency(component_id, depend_on_mask);
+            ArchetypeComponents dependency;
+            dependency.unique = ComponentFactory::makeMask<DEPENDENT...>();
+            dependency.shared = ComponentFactory::makeSharedMask<DEPENDENT...>();
+            if constexpr (isComponentShared<_Master>()) {
+                addDependency(ComponentFactory::registerSharedComponent<_Master>(), dependency);
+            } else {
+                addDependency(ComponentFactory::registerComponent<_Master>(), dependency);
+            }
         }
 
         void addChunkSizeFunction(const ArchetypeChunkSizeFunction& function);
@@ -193,9 +203,9 @@ namespace mustache {
         friend Archetype;
         void updateLocation(Entity e, ArchetypeIndex archetype, ArchetypeEntityIndex index) noexcept {
             if (e.id().isValid()) {
-                if (!locations_.has(e.id())) {
-                    locations_.resize(e.id().next().toInt());
-                }
+//                if (!locations_.has(e.id())) {
+//                    locations_.resize(e.id().next().toInt());
+//                }
                 auto& location = locations_[e.id()];
                 location.archetype = archetype;
                 location.index = index;
@@ -219,7 +229,8 @@ namespace mustache {
         ArrayWrapper<SharedComponentsData, SharedComponentId, false> shared_components_;
         using ArchetypeMap = std::map<SharedComponentsData, Archetype*>;
         std::map<ArchetypeComponents, ArchetypeMap> mask_to_arch_;
-        std::map<ComponentId, ComponentIdMask > dependencies_;
+        std::map<ComponentId, ArchetypeComponents > unique_dependencies_;
+        std::map<SharedComponentId, ArchetypeComponents > shared_dependencies_;
         EntityId next_slot_ = EntityId::make(0);
 
         uint32_t empty_slots_{0};
@@ -263,6 +274,7 @@ namespace mustache {
         if(!empty_slots_) {
             entity.reset(EntityId::make(entities_.size()), EntityVersion::make(0), this_world_id_);
             entities_.push_back(entity);
+            locations_.emplace_back();
             updateLocation(entity, archetype.id(), archetype.insert(entity));
         } else {
             const auto id = next_slot_;

@@ -21,10 +21,10 @@ EntityManager::EntityManager(World& world):
 }
 
 Archetype& EntityManager::getArchetype(const ComponentIdMask& mask, const SharedComponentsInfo& shared) {
-    const ComponentIdMask arch_mask = mask.merge(getExtraComponents(mask));
     ArchetypeComponents archetype_components;
-    archetype_components.unique = arch_mask;
+    archetype_components.unique = mask;
     archetype_components.shared = shared.ids();
+    archetype_components = getAllComponents(archetype_components);
     auto& map = mask_to_arch_[archetype_components];
     auto& result = map[shared.data()];
     if(result) {
@@ -39,7 +39,7 @@ Archetype& EntityManager::getArchetype(const ComponentIdMask& mask, const Shared
     auto max = archetype_chunk_size_info_.max_size;
 
     for (const auto& func : get_chunk_size_functions_) {
-        const auto size = func(arch_mask);
+        const auto size = func(archetype_components.unique);
         if (min == 0 || size.min > min) {
             min = size.min;
         }
@@ -62,7 +62,7 @@ Archetype& EntityManager::getArchetype(const ComponentIdMask& mask, const Shared
         chunk_size = max;
     }
 
-    result = new Archetype(world_, archetypes_.back_index().next(), arch_mask, shared, chunk_size);
+    result = new Archetype(world_, archetypes_.back_index().next(), archetype_components.unique, shared, chunk_size);
     archetypes_.emplace_back(result, deleter);
     return *result;
 }
@@ -125,9 +125,18 @@ void EntityManager::clearArchetype(Archetype& archetype) {
     archetype.clear();
 }
 
-void EntityManager::addDependency(ComponentId component, const ComponentIdMask& extra) noexcept {
-    auto& dependency = dependencies_[component];
-    dependency = dependency.merge(extra.merge(getExtraComponents(extra)));
+void EntityManager::addDependency(ComponentId component, const ArchetypeComponents& extra) noexcept {
+    auto& dependency = unique_dependencies_[component];
+    const auto all = getAllComponents(extra);
+    dependency.unique.add(all.unique);
+    dependency.shared.add(all.shared);
+}
+
+void EntityManager::addDependency(SharedComponentId component, const ArchetypeComponents& extra) noexcept {
+    auto& dependency = shared_dependencies_[component];
+    const auto all = getAllComponents(extra);
+    dependency.unique.add(all.unique);
+    dependency.shared.add(all.shared);
 }
 
 void EntityManager::addChunkSizeFunction(const ArchetypeChunkSizeFunction& function) {
@@ -142,16 +151,36 @@ void EntityManager::setDefaultArchetypeVersionChunkSize(uint32_t value) noexcept
     archetype_chunk_size_info_.default_size = value;
 }
 
-ComponentIdMask EntityManager::getExtraComponents(const ComponentIdMask& mask) const noexcept {
-    ComponentIdMask result;
-    if (!dependencies_.empty()) {
-        mask.forEachItem([&result, this](ComponentId id) {
-            const auto find_res = dependencies_.find(id);
-            if (find_res != dependencies_.end()) {
-                result = result.merge(find_res->second);
+ArchetypeComponents EntityManager::getExtraComponents(const ArchetypeComponents& components) const noexcept {
+    ArchetypeComponents result;
+    if (!unique_dependencies_.empty()) {
+        components.unique.forEachItem([&result, this](ComponentId id) {
+            const auto find_res = unique_dependencies_.find(id);
+            if (find_res != unique_dependencies_.end()) {
+                result.unique.add(find_res->second.unique);
+                result.shared.add(find_res->second.shared);
             }
         });
     }
+
+    if (!shared_dependencies_.empty()) {
+        components.shared.forEachItem([&result, this](SharedComponentId id) {
+            const auto find_res = shared_dependencies_.find(id);
+            if (find_res != shared_dependencies_.end()) {
+                result.unique.add(find_res->second.unique);
+                result.shared.add(find_res->second.shared);
+            }
+        });
+    }
+
+    return result;
+}
+
+ArchetypeComponents EntityManager::getAllComponents(const ArchetypeComponents& components) const noexcept {
+    ArchetypeComponents result;
+    const auto extra = getExtraComponents(components);
+    result.unique = components.unique.merge(extra.unique);
+    result.shared = components.shared.merge(extra.shared);
     return result;
 }
 

@@ -101,8 +101,8 @@ namespace mustache {
         template<size_t _ComponentIndex>
         static constexpr auto getNullptr() noexcept {
             using Type = typename Info::FunctionInfo::template SharedComponentType<_ComponentIndex>::type;
-            using ResultType = typename std::remove_reference<Type>::type*;
-            return static_cast<ResultType>(nullptr);
+            using ResultType = typename ComponentType<Type>::type;
+            return static_cast<const ResultType*>(nullptr);
         }
 
         template<size_t... _I, size_t... _SI>

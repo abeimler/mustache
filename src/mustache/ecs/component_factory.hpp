@@ -56,10 +56,28 @@ namespace mustache {
             }
         }
 
+        template<typename _C>
+        static void applyToSharedMask(SharedComponentIdMask& mask) noexcept {
+            if constexpr (isComponentShared<_C>()) {
+                using Component = typename ComponentType<_C>::type;
+                if constexpr (IsComponentRequired<_C>::value) {
+                    static const auto id = registerSharedComponent<Component>();
+                    mask.add(id);
+                }
+            }
+        }
+
         template <typename... _C>
         static SharedComponentsInfo makeSharedInfo() noexcept {
             SharedComponentsInfo result;
             (applyToSharedInfo<_C>(result), ...);
+            return result;
+        }
+
+        template <typename... _C>
+        static SharedComponentIdMask makeSharedMask() noexcept {
+            SharedComponentIdMask result;
+            (applyToSharedMask<_C>(result), ...);
             return result;
         }
 

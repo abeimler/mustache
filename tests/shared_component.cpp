@@ -123,13 +123,21 @@ TEST(SharedComponent, AssignShared) {
 
     std::map<const SharedComponent0*, uint32_t> counts;
     count = 0;
-    entities.forEach([&counts, &count](const SharedComponent0& v){
-        ++counts[&v];
+
+    for (uint32_t i = 0; i < 1000; ++i) {
+        (void ) entities.create();
+    }
+
+    entities.forEach([&counts, &count](const SharedComponent0* v){
+        ++counts[v];
         ++count;
     });
-    ASSERT_EQ(count, 3);
+
+    ASSERT_EQ(count, 1003);
     ASSERT_EQ(counts[&ptr], 2);
     ASSERT_EQ(counts[&ref2], 1);
+    ASSERT_EQ(counts[&ref2], 1);
+    ASSERT_EQ(counts[nullptr], 1000);
 
     const auto arch1 = entities.getArchetypeOf(e1);
     const auto arch2 = entities.getArchetypeOf(e2);

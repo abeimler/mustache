@@ -646,7 +646,15 @@ TEST(EntityManager, dependency) {
         uint32_t value = 0xABADBABE;
     };
 
+    struct MainSharedComponent {
+        uint32_t value = 0xBADBABE;
+    };
+
     struct DependentComponent {
+        uint32_t value = 0xB00B5;
+    };
+
+    struct DependentSharedComponent {
         uint32_t value = 0xB00B5;
     };
 
@@ -740,4 +748,9 @@ TEST(EntityManager, dependency) {
         ASSERT_EQ(entities.getComponent<DependentComponent>(e)->value, 0xB00B5);
     }
 
+    {
+        auto e = entities.begin().assign<MainSharedComponent>().end();
+        ASSERT_TRUE(entities.hasComponent<MainSharedComponent>(e));
+        ASSERT_FALSE(entities.hasComponent<DependentSharedComponent>(e));
+    }
 }

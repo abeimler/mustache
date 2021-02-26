@@ -75,6 +75,11 @@ namespace mustache {
             value_.set(item.toInt());
         }
 
+        ComponentMask& add(const ComponentMask& extra) noexcept {
+            value_ |= extra.value_;
+            return *this;
+        }
+
         [[nodiscard]] ComponentMask merge(const ComponentMask& extra) const noexcept {
             ComponentMask result;
             result.value_ = value_ | extra.value_;
