@@ -1,6 +1,7 @@
 #include "base_job.hpp"
 #include <mustache/ecs/world.hpp>
 #include <mustache/ecs/world_filter.hpp>
+#include "mustache/utils/profiler.hpp"
 
 using namespace mustache;
 
@@ -82,6 +83,7 @@ uint32_t BaseJob::taskCount(World& world, uint32_t entity_count) const noexcept 
 }
 
 void BaseJob::run(World& world, JobRunMode mode) {
+    PROFILER_FUNCTION(nameCStr())
     const auto entities_count = applyFilter(world);
     if (entities_count < 1u) {
         return;

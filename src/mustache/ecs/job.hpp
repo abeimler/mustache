@@ -1,13 +1,16 @@
 #pragma once
 
 #include <cstdint>
+
 #include <mustache/ecs/world.hpp>
 #include <mustache/ecs/entity_manager.hpp>
 #include <mustache/ecs/job_arg_parcer.hpp>
 #include <mustache/ecs/world_filter.hpp>
 #include <mustache//ecs/task_view.hpp>
 #include <mustache/ecs/base_job.hpp>
+
 #include <mustache/utils/dispatch.hpp>
+#include <mustache/utils/profiler.hpp>
 
 namespace mustache {
 
@@ -71,9 +74,12 @@ namespace mustache {
             dispatcher.waitForParallelFinish();
         }
 
-        virtual std::string name() const noexcept override {
-            return type_name<T>();
+        virtual const char* nameCStr() const noexcept override {
+            static const auto job_type_name = type_name<T>();
+            static const auto result = job_type_name.c_str();
+            return result;
         }
+
     protected:
 
         template<typename... _ARGS>
@@ -121,6 +127,8 @@ namespace mustache {
         template<size_t... _I, size_t... _SI>
         MUSTACHE_INLINE void singleTask(ArchetypeGroup archetype_group, JobInvocationIndex invocation_index,
                                         const std::index_sequence<_I...>&, const std::index_sequence<_SI...>&) {
+            PROFILER_CATEGORY(nameCStr(), None);
+//            PROFILER_FUNCTION("singleTask");
             auto shared_components = std::make_tuple(
                     getNullptr<_SI>()...
             );
@@ -175,8 +183,8 @@ namespace mustache {
                 func(std::forward<ARGS>(args)...);
             }
 
-            virtual std::string name() const noexcept override {
-                return job_name;
+            virtual const char* nameCStr() const noexcept override {
+                return job_name.c_str();
             }
         };
         TmpJob job = std::forward<_F>(function);

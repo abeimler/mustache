@@ -7,6 +7,7 @@
 #include <mustache/ecs/component_factory.hpp>
 #include <mustache/ecs/entity_manager.hpp>
 #include <mustache/ecs/world.hpp>
+#include <mustache/utils/profiler.hpp>
 //#include <mustache/ecs/world.hpp>
 #include <mustache/utils/benchmark.hpp>
 
@@ -121,10 +122,11 @@ void iterate500k() {
     mustache::World world{mustache::WorldId::make(0)};
     auto& entities = world.entities();
     auto& archetype = entities.getArchetype<Position, Velocity, Rotation>();
-    for (uint32_t i = 0; i < kNumObjects; ++i) {
-        (void)entities.create(archetype);
+    {
+        for (uint32_t i = 0; i < kNumObjects; ++i) {
+            (void) entities.create(archetype);
+        }
     }
-
     constexpr float dt = 1.0f / static_cast<float>(kNumIteration);
 
     mustache::Benchmark benchmark;
@@ -148,6 +150,7 @@ void iterate500k() {
         benchmark.add([&entities/*, &count_arr*/] {
             entities.forEach([/*&count_arr*/](Position& pos, const Velocity& vel, const Rotation& rot/*,
                     const mustache::JobInvocationIndex& invocation_index*/) {
+//                OPTICK_EVENT();
                 pos.value += dt * vel.value * forward(rot.orient);
 //                ++count_arr[invocation_index.thread_id.toInt()].value;
             }, mustache::JobRunMode::kParallel);
@@ -245,6 +248,7 @@ void bench_events();
 void POC();
 
 int main() {
+//    EASY_MAIN_THREAD
 //    showComponentInfo<Component0>();
 //    showComponentInfo<Component0*>();
 //    showComponentInfo<const Component0>();
@@ -266,10 +270,14 @@ int main() {
 //    create1mBuilder();
 //    createEmptyAndAssign();
 
+    PROFILER_START();
+    PROFILER_MAIN_THREAD();
     iterate500k();
+    PROFILER_DUMP("bench2")
 //    bench_events();
 
 //    POC();
 //    storeLoad();
+
     return 0;
 }

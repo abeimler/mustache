@@ -3,6 +3,19 @@ cmake_minimum_required(VERSION 3.10)
 project(mustache VERSION 0.1 LANGUAGES CXX)
 
 
+# TODO: Use list
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    include(../cmake/gcc_warnings.cmake)
+
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    include(../cmake/clang_warnings.cmake)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    include(../cmake/msvc_warnings.cmake)
+endif()
+
+
 find_package(Threads REQUIRED)
 
 add_library(${PROJECT_NAME} STATIC
@@ -73,3 +86,4 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME} mustache_profiler)

@@ -1,5 +1,6 @@
 #include "system.hpp"
 #include <mustache/ecs/job.hpp>
+#include <mustache/utils/profiler.hpp>
 
 using namespace mustache;
 
@@ -34,6 +35,7 @@ void ASystem::start(World& world) {
 
 void ASystem::update(World& world) {
     checkState(SystemState::kActive);
+    PROFILER_CATEGORY(nameCStr(), None);
     onUpdate(world);
 }
 

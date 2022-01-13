@@ -1,7 +1,10 @@
 #include "dispatch.hpp"
+
 #include <queue>
 #include <map>
 #include <set>
+
+#include <mustache/utils/profiler.hpp>
 
 #ifdef __EMSCRIPTEN__
 #include<emscripten/threading.h>
@@ -107,6 +110,8 @@ struct Dispatcher::Data {
 #define DOUBLE_LOCK 1
 
     void threadTask(ThreadId thread_id) noexcept {
+        const std::string thread_name = "Worker: " + std::to_string(thread_id.toInt());
+        PROFILER_THREAD(thread_name.c_str());
         g_thread_id = thread_id;
         JobQueue* queue = nullptr;
         while (!terminate) {
