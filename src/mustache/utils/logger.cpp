@@ -37,7 +37,7 @@ void LogWriter::onMessage(const Context& ctx, LogLevel lvl, std::string str, ...
     va_start (args, str);
 
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-    const auto buffer_size = vsnprintf(nullptr, 0, str.c_str(), args);
+    const auto buffer_size = static_cast<size_t>(vsnprintf(nullptr, 0, str.c_str(), args));
     static std::string buffer;
     buffer.resize(buffer_size);
     va_end (args);

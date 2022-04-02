@@ -1,4 +1,5 @@
 #include "type_info.hpp"
+
 using namespace mustache;
 
 std::string detail::make_type_name_from_func_name(const char* func_name) noexcept {

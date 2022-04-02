@@ -161,7 +161,7 @@ void mustache::SystemManager::reorderSystems() {
                 const auto name = info.system->name();
                 ordered_systems.push_back(info.system);
                 unplaced_systems_names.erase(name);
-                systems_cpy.erase(systems_cpy.begin() + i);
+                systems_cpy.erase(systems_cpy.begin() + static_cast<ptrdiff_t>(i));
                 was_placement = true;
                 break;
             }

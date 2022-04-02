@@ -3,6 +3,7 @@
 #include <mustache/utils/dll_export.h>
 
 #include <string>
+#include <vector>
 #include <cstddef>
 #include <functional>
 #include <stdexcept>

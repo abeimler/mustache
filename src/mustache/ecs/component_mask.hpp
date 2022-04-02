@@ -170,8 +170,8 @@ namespace mustache {
         void remove(SharedComponentId id) {
             if (has(id)) {
                 const auto index = indexOf(id);
-                data_.erase(data_.begin() + index.toInt());
-                ids_.erase(ids_.begin() + index.toInt());
+                data_.erase(data_.begin() + index.toInt<ptrdiff_t>());
+                ids_.erase(ids_.begin() + index.toInt<ptrdiff_t>());
             }
             mask_.set(id, false);
         }

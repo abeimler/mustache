@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.7)
 project(mustache
     VERSION 0.2
     LANGUAGES C CXX
-    HOMEPAGE_URL https://github.com/kirillochnev/mustache
 )
 
 message(VERBOSE "*")
